@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ALT Text Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .drop-zone {
+      border: 2px dashed #ccc;
+      padding: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .drop-zone.dragover {
+      border-color: #000;
+      background: #f5f5f5;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ALT Text Generator</h1>
+
+  <div class="drop-zone" id="dropZone">
+    Drag & drop an image here or click to upload
+    <input type="file" id="fileInput" hidden />
+  </div>
+
+  <br>
+
+  <input type="text" id="keyword" placeholder="Optional keyword" />
+
+  <br>
+
+  <button id="generateBtn">Generate ALT Text</button>
+
+  <div id="result"></div>
+
+  <script>
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const button = document.getElementById("generateBtn");
+    const result = document.getElementById("result");
+
+    let selectedFile = null;
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", (e) => {
+      selectedFile = e.target.files[0];
+      dropZone.innerText = selectedFile.name;
+    });
+
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+
+      selectedFile = e.dataTransfer.files[0];
+      dropZone.innerText = selectedFile.name;
+    });
+
+    button.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Upload an image first");
+        return;
+      }
+
+      result.innerText = "Generating...";
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("keyword", document.getElementById("keyword").value);
+
+      const response = await fetch("/api/alt-from-upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      result.innerText = data.altText || data.error;
+    });
+  </script>
+
+</body>
+</html>
